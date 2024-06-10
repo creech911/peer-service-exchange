@@ -1,1 +1,1 @@
-# peer-service-exchange
+The PeerServiceExchange project facilitates a decentralized platform where users can exchange services seamlessly. This repository contains the frontend logic, utilizing JavaScript to bridge user interactions with our smart contracts and backend API. Users can input service details, manage transactions, and view available services directly from the UI. It's designed to make the process of offering or procuring services straightforward, ensuring a reliable and user-friendly experience on the blockchain.
