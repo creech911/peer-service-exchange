@@ -1,114 +1,84 @@
-import Web3 from 'web3';
-import axios from 'axios';
+<!-- Place within your existing HTML structure -->
+<input type="text" id="search-service" placeholder="Search services...">
+<button onclick="searchService()">Search</button>
 
-const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+<!-- Pagination Controls -->
+<div id="services-pagination">
+  <button onclick="changeServicesPage(-1)">Prev</button>
+  <span id="current-service-page">1</span>
+  <button onclick="changeServicesPage(1)">Next</button>
+</div>
 
-const web3 = new Web3(Web3.givenProvider || 'http://localhost:8545');
-const peerServiceExchangeABI = [];
+<div id="transactions-pagination">
+  <button onclick="changeTransactionsPage(-1)">Prev</button>
+  <span id="current-transaction-page">1</span>
+  <button onclick="changeTransactionsPage(1)">Next</button>
+</div>
+```
+```javascript
+// Added Code Begins
+const ITEMS_PER_PAGE = 10;
+let currentServicePage = 1;
+let currentTransactionPage = 1;
+let filteredServices = [];
+let allServices = [];
+let allTransactions = [];
 
-const peerServiceExchangeContract = new web3.eth.Contract(peerServiceExchangeABI, CONTRACT_ADDRESS);
-
-const serviceForm = document.getElementById('service-form');
-const updateServiceForm = document.getElementById('update-service-form');
-const transactionForm = document.getElementById('transaction-form');
-const servicesList = document.getElementById('services-list');
-const transactionsList = document.getElementById('transactions-list');
-
-serviceForm.addEventListener('submit', addService);
-updateServiceForm.addEventListener('submit', updateService);
-transactionForm.addEventListener('submit', addTransaction);
-
-peerServiceExchangeContract.events.ServiceAdded({
-    fromBlock: 'latest'
-}, function (error, event) {
-    if (error) console.error(error);
-    else fetchServices();
-}).on('data', function(event){
-    console.log('Service Added Event:', event);
-});
-
-peerServiceExchangeContract.events.ServiceUpdated({
-    fromBlock: 'latest'
-}, function (error, event) {
-    if (error) console.error(error);
-    else fetchServices();
-}).on('data', function(event){
-    console.log('Service Updated Event:', event);
-});
-
-peerServiceExchangeContract.events.ServiceDeleted({
-    fromBlock: 'latest'
-}, function (error, event) {
-    if (error) console.error(error);
-    else fetchServices();
-}).on('data', function(event){
-    console.log('Service Deleted Event:', event);
-});
-
-async function addService(event) {
-    event.preventDefault();
-    
-    const title = event.target.elements['title'].value;
-    const description = event.target.elements['description'].value;
-    const price = event.target.elements['price'].value;
-
-    try {
-        const accounts = await web3.eth.getAccounts();
-        await peerServiceExchangeContract.methods.addService(title, description, price).send({ from: accounts[0] });
-    } catch (error) {
-        console.error("Error adding service: ", error);
-    }
-
-    fetchServices();
+// Search functionality
+function searchService() {
+  const searchText = document.getElementById('search-service').value.toLowerCase();
+  filteredServices = allServices.filter(service => 
+    service.title.toLowerCase().includes(searchText) || service.description.toLowerCase().includes(searchText)
+  );
+  currentServicePage = 1; // Reset to the first page
+  displayServices();
 }
 
-async function updateService(event) {
-    event.preventDefault();
-    
-    const id = event.target.elements['serviceId'].value;
-    const title = event.target.elements['title'].value;
-    const description = event.target.elements['description'].value;
-    const price = event.target.elements['price'].value;
+// Update the display function to include pagination and potentially filtering
+function displayServices() {
+  servicesList.innerHTML = '';
+  const pageServices = filteredServices.slice((currentServicePage - 1) * ITEMS_PER_PAGE, currentServicePage * ITEMS_PER_PAGE);
 
-    try {
-        const accounts = await web3.eth.getAccounts();
-        await peerServiceExchangeContract.methods.updateService(id, title, description, price).send({ from: accounts[0] });
-    } catch (error) {
-        console.error("Error updating service: ", error);
-    }
+  pageServices.forEach(service => {
+    const serviceElement = document.createElement('li');
+    serviceElement.textContent = `ID: ${service.id}, Title: ${service.title}, Description: ${service.description}, Price: ${service.price}`;
+    servicesList.appendChild(serviceElement);
+  });
 
-    fetchServices();
+  document.getElementById('current-service-page').textContent = currentServiceSheare.toString();
 }
 
-async function addTransaction(event) {
-    event.preventDefault();
-
-    const serviceId = event.target.elements['serviceId'].value;
-    const paymentAmount = event.target.elements['paymentAmount'].value;
-
-    try {
-        const accounts = await web3.eth.getAccounts();
-        await peerServiceExchangeContract.methods.addTransaction(serviceId, paymentAmount).send({ from: accounts[0] });
-    } catch (error) {
-        console.error("Error adding transaction: ", error);
-    }
-
-    fetchTransactions();
+function changeServicesPage(offset) {
+  currentServicePage += offset;
+  displayServices();
 }
 
+// Similar functionality for transactions
+function displayTransactions() {
+  transactionsList.innerHTML = '';
+  const pageTransactions = allTransactions.slice((currentTransactionPage - 1) * ITEMS_PER_PAGE, currentTransactionPage * ITEMS_PER_PAGE);
+
+  pageTransactions.forEach(transaction => {
+    const transactionElement = document.createElement('li');
+    transactionElement.textContent = `Service ID: ${transaction.serviceId}, Payment: ${transaction.paymentAmount}`;
+    transactionsList.appendChild(transactionElement);
+  });
+
+  document.getElementById('current-transaction-page').textContent = currentTransactionPage.toString();
+}
+
+function changeTransactionsPage(offset) {
+  currentTransactionPage += offset;
+  displayTransactions();
+}
+
+// Modify existing fetchServices and fetchTransactions functions
 async function fetchServices() {
     try {
-        const response = await axios.get(`${API_BASE_URL}/services`);
-        const services = response.data;
-
-        servicesList.innerHTML = '';
-
-        services.forEach(service => {
-            const serviceElement = document.createElement('li');
-            serviceElement.textContent = `ID: ${service.id}, Title: ${service.title}, Description: ${service.description}, Price: ${service.price}`;
-            servicesList.appendChild(serviceElement);
-        });
+        const response = await axios.get(`${API_BASE_method ?>/services`);
+        allServices = response.data; // Stores all the services
+        filteredServices = allServices; // By default show all services
+        displayServices(); // Call the new display function
     } catch (error) {
         console.error("Error fetching services: ", error);
     }
@@ -116,20 +86,15 @@ async function fetchServices() {
 
 async function fetchTransactions() {
     try {
-        const response = await axios.get(`${API_BASE_URL}/transactions`);
-        const transactions = response.data;
-
-        transactionsList.innerHTML = '';
-
-        transactions.forEach(transaction => {
-            const transactionElement = document.createElement('li');
-            transactionElement.textContent = `Service ID: ${transaction.serviceId}, Payment: ${transaction.paymentAmount}`;
-            transactionsList.appendChild(transactionElement);
-        });
+        const response = await axios.get(`${API_BASE_method }}/transactions`);
+        allTransactions = response.data;
+        displayTransactions();
     } catch (error) {
         console.error("Error fetching transactions: ", error);
     }
 }
 
+// Call functions on script load to initialize view
 fetchServices();
 fetchTransactions();
+// Added Code Ends
