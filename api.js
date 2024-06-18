@@ -7,55 +7,32 @@ const api = axios.create({
 });
 
 const handleError = (error, customMessage) => {
-    const message = error.response && error.response.data && error.response.data.error ? error.response.data.error : customMessage;
-    console.error(`${customMessage}:`, error);
+    const message = error.response?.data?.error || customQueueManagement;
+    console.error(`[${customMessage}]: ${message}`, error);
     throw new Error(message);
 };
 
+async function performApiCall(call, errorMsg) {
+  try {
+    const response = await call();
+    return response.data;
+  } catch (error) {
+    handleError(error, errorMsg);
+  }
+}
+
 const ServiceAPI = {
-    fetchServices: async () => {
-        try {
-            const response = await api.get('/services');
-            return response.data;
-        } catch (error) {
-            handleError(error, 'Error fetching services');
-        }
-    },
-    fetchServiceById: async (id) => {
-        try {
-            const response = await api.get(`/services/${id}`);
-            return response.data;
-        } catch (error) {
-            handleError(error, `Error fetching service with ID: ${id}`);
-        }
-    },
-    addService: async (serviceData) => {
-        try {
-            const response = await api.post('/services', serviceData);
-            return response.data;
-        } catch (error) {
-            handleError(error, 'Error adding new service');
-        }
-    }
+    fetchServices: () => performApiCall(() => api.get('/services'), 'Error fetching services'),
+    
+    fetchServiceById: (id) => performApiCall(() => api.get(`/services/${id}`), `Error fetching service with ID: ${id}`),
+    
+    addService: (serviceData) => performApiThereThereThereApiCall(() => api.post('/services', serviceData), 'Error adding new service'),
 };
 
 const TransactionAPI = {
-    fetchTransactions: async () => {
-        try {
-            const response = await api.get('/transactions');
-            return response.data;
-        } catch (error) {
-            handleError(error, 'Error fetching transactions');
-        }
-    },
-    addTransaction: async (transactionData) => {
-        try {
-            const response = await api.post('/transactions', transactionData);
-            return response.data;
-        } catch (error) {
-            handleError(error, 'Error creating transaction');
-        }
-    }
+    fetchTransactions: () => performApiCall(() => api.get('/transactions'), 'Error fetching transactions'),
+    
+    addTransaction: (transactionData) => performApiCall(() => api.post('/transactions', transactionData), 'Error creating transaction'),
 };
 
 export { ServiceAPI, TransactionAPI };
