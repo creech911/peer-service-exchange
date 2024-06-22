@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const ServiceList = ({ services }) => {
+export const ServicesList = ({ services }) => {
   return (
     <div className="service-list">
       {services.map((service, index) => (
@@ -13,28 +13,28 @@ export const ServiceList = ({ services }) => {
   );
 };
 
-export const ServiceDetail = ({ service }) => {
+export const ServiceDetails = ({ service }) => {
   return (
     <div className="service-detail">
       <h2>{service.name}</h2>
       <p>{service.description}</p>
       <p>Price: {service.price}</p>
-    </ref>
+    </div>
   );
 };
 
-export const TransactionForm = ({ onSubmit }) => {
-  const handleSubmit = (event) => {
+export const TransactionForm = ({ onSubmitTransaction }) => {
+  const handleFormSubmit = (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    onSubmit(Object.fromEntries(formData));
+    onSubmitTransaction(Object.fromEntries(formData));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="transaction-form">
+    <form onSubmit={handleFormSubmit} className="transaction-form">
       <label htmlFor="service">Service</label>
       <select id="service" name="service" required>
-      </selected>
+      </select>
       
       <label htmlFor="details">Transaction Details</label>
       <textarea id="details" name="details" required></textarea>
@@ -44,22 +44,22 @@ export const TransactionForm = ({ onSubmit }) => {
   );
 };
 
-export const UserSettingsInForm = ({ user, onSave }) => {
-  const handleSubmit = (event) => {
+export const UserSettingsForm = ({ userData, onSaveUserSettings }) => {
+  const handleSettingsSubmit = (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    onSave(Object.fromEntries(formData));
+    onSaveUserSettings(Object.fromEntries(formData));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="user-settings-form">
+    <form onSubmit={handleSettingsSubmit} className="user-settings-form">
       <label htmlFor="username">Username</label>
-      <input id="username" name="username" defaultValue={user.username} required />
+      <input id="username" name="username" defaultValue={userData.username} required />
       
       <label htmlFor="email">Email</label>
-      <input id="email" type="email" name="email" defaultValue={user.email} required />
+      <input id="email" type="email" name="email" defaultValue={userData.email} required />
       
-      <button type="submit">Save IngChanges</button>
+      <button type="submit">Save Changes</button>
     </form>
   );
 };
