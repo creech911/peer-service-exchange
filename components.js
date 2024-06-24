@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const ServicesList = ({ services }) => {
+export const ServiceList = ({ services }) => {
   return (
     <div className="service-list">
       {services.map((service, index) => (
@@ -13,7 +13,7 @@ export const ServicesList = ({ services }) => {
   );
 };
 
-export const ServiceDetails = ({ service }) => {
+export const ServiceDetail = ({ service }) => {
   return (
     <div className="service-detail">
       <h2>{service.name}</h2>
@@ -23,15 +23,15 @@ export const ServiceDetails = ({ service }) => {
   );
 };
 
-export const TransactionForm = ({ onSubmitTransaction }) => {
-  const handleFormSubmit = (event) => {
+export const TransactionCreationForm = ({ onTransactionSubmit }) => {
+  const handleFormSubmission = (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    onSubmitTransaction(Object.fromEntries(formData));
+    onTransactionSubmit(Object.fromEntries(formData));
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="transaction-form">
+    <form onSubmit={handleFormSubmission} className="transaction-form">
       <label htmlFor="service">Service</label>
       <select id="service" name="service" required>
       </select>
@@ -44,20 +44,20 @@ export const TransactionForm = ({ onSubmitTransaction }) => {
   );
 };
 
-export const UserSettingsForm = ({ userData, onSaveUserSettings }) => {
-  const handleSettingsSubmit = (event) => {
+export const UserProfileSettingsForm = ({ userProfile, onSaveUserProfile }) => {
+  const handleSettingsUpdate = (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    onSaveUserSettings(Object.fromEntries(formData));
+    onSaveUserProfile(Object.fromEntries(formData));
   };
 
   return (
-    <form onSubmit={handleSettingsSubmit} className="user-settings-form">
+    <form onSubmit={handleSettingsUpdate} className="user-settings-form">
       <label htmlFor="username">Username</label>
-      <input id="username" name="username" defaultValue={userData.username} required />
+      <input id="username" name="username" defaultValue={userProfile.username} required />
       
       <label htmlFor="email">Email</label>
-      <input id="email" type="email" name="email" defaultValue={userData.email} required />
+      <input id="email" type="email" name="email" defaultValue={userProfile.email} required />
       
       <button type="submit">Save Changes</button>
     </form>
