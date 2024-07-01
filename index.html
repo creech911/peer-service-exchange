@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeerServiceExchange</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to PeerServiceExchange</h1>
+    </header>
+    <section id="browse-services">
+        <h2>Browse Available Services</h2>
+        <div class="services-list">
+            <p>Browse services here...</p>
+        </div>
+    </section>
+    <section id="offer-services">
+        <h2>Offer Your Services</h2>
+        <form action="/submit-service" method="POST">
+            <label for="service-name">Service Name:</label>
+            <input type="text" id="service-name" name="service-name" required>
+            <label for="service-description">Description:</label>
+            <textarea id="service-description" name="service-description" required></textarea>
+            <label for="service-price">Price:</label>
+            <input type="text" id="service-price" name="service-price" required>
+            <button type="submit">Submit Service</button>
+        </form>
+    </section>
+    <section id="manage-transactions">
+        <h2>Manage Your Transactions</h2>
+        <form action="/submit-transaction" method="POST">
+            <label for="transaction-service-id">Service ID:</label>
+            <input type="text" id="transaction-service-id" name="transaction-service-id" required>
+            <label for="transaction-details">Transaction Details:</label>
+            <textarea id="transaction-details" name="transaction-details" required></textarea>
+            <button type="submit">Submit Transaction</button>
+        </form>
+    </section>
+    <footer>
+        <p>&copy; 2023 PeerServiceExchange</p>
+    </footer>
+</body>
+</html>
