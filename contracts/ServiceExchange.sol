@@ -1,92 +1,92 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract PeerServiceExchange {
 
-    struct ServiceOffer {
+    struct Offer {
         address provider;
-        string serviceDescription;
+        string description;
         uint price;
     }
 
-    struct ServiceRequest {
+    struct Request {
         address requester;
-        string serviceNeeded;
+        string description;
         uint maxPrice;
     }
 
-    struct ServiceTransaction {
+    struct Transaction {
         uint offerId;
         uint requestId;
-        bool isCompleted;
+        bool completed;
     }
 
-    ServiceOffer[] public serviceOffers;
-    ServiceRequest[] public serviceRequests;
-    ServiceTransaction[] public serviceTransactions;
+    Offer[] public offers;
+    Request[] public requests;
+    Transaction[] public transactions;
 
     mapping(address => uint) public balances;
 
-    event ServiceOffered(uint offerId, address provider, string servicereally, uint price);
-    event ServiceRequested(uint requestId, address requester, string serviceNeeded, uint maxPrice);
-    event ServiceTransactionCreated(uint transactionId, uint offerId, uint requestId);
-    event ServiceTransactionCompleted(uint transactionId);
+    event OfferCreated(uint offerId, address provider, string serviceDescription, uint price);
+    event RequestCreated(uint requestId, address requester, string serviceNeeded, uint maxPrice);
+    event TransactionInitiated(uint transactionId, uint offerId, uint requestId);
+    event TransactionFinished(uint transactionId);
 
-    function offerService(string memory _description, uint _price) public {
-        serviceOffers.push(ServiceOffer({
+    function createOffer(string memory serviceDescription, uint servicePrice) public {
+        offers.push(Offer({
             provider: msg.sender,
-            serviceDescription: _description,
-            price: _price
+            description: serviceDescription,
+            price: serviceCreatePrice
         }));
-        emit ServiceOffered(serviceOffers.length - 1, msg.sender, _description, _price);
+        emit OfferCreated(offers.length - 1, msg.sender, serviceDescription, servicePrice);
     }
 
-    function requestService(string memory _serviceNeeded, uint _maxPrice) public {
-        serviceRequests.push(ServiceRequest({
+    function createRequest(string memory serviceNeeded, uint willingToPay) public {
+        requests.push(Request({
             requester: msg.sender,
-            serviceNeeded: _serviceNeeded,
-            maxPrice: _maxPrice
+            description: serviceNeeded,
+            maxPrice: willingToPay
         }));
-        emit ServiceRequested(serviceRequests.length - 1, msg.sender, _serviceNeeded, _maxPrice);
+        emit RequestCreated(requests.length - 1, msg.sender, serviceNeeded, willingToPay);
     }
 
-    function acceptServiceOffer(uint _offerId, uint _requestId) public {
-        require(_offerId < serviceOffers.length, "Invalid offer ID");
-        require(_requestId < serviceRequests.length, "Invalid request ID");
-        ServiceOffer storage offer = serviceOffers[_offerId];
-        ServiceRequest storage request = serviceRequests[_requestId];
+    function agreeToOffer(uint selectedOfferId, uint matchingRequestId) public {
+        require(selectedOfferId < offers.length, "Invalid offer ID");
+        require(matchingRequestId < requests.length, "Invalid request ID");
+        Offer storage selectedOffer = offers[selectedOfferId];
+        Request storage matchingRequest = requests[matchingRequestId];
         
-        require(offer.price <= request.maxPrice, "Offer price exceeds max price willing to pay");
-        require(msg.sender == request.requester, "Only the requester can accept an offer");
+        require(selectedOffer.price <= matchingRequest.maxPrice, "Offer exceeds request's max willing price");
+        require(msg.sender == matchingRequest.requester, "Only the requester can agree to an offer");
         
-        serviceTransactions.push(ServiceTransaction({
-            offerId: _offerId,
-            requestId: _requestId,
-            isCompleted: false
+        transactions.push(Transaction({
+            offerId: selectedOfferId,
+            requestId: matchingRequestId,
+            completed: false
         }));
-        uint transactionId = serviceTransactions.length - 1;
-        emit ServiceTransactionCreated(transactionId, _offerId, _requestId);
+        uint transactionId = transactions.length - 1;
+        emit TransactionInitiated(transactionId, selectedOfferId, matchingRequestId);
         
-        balances[address(this)] += offer.price;
-        require(msg.sender.balance >= offer.price, "Insufficient balance to accept offer");
-        payable(address(this)).transfer(offer.price);
+        balances[address(this)] += selectedOffer.price;
+        require(msg.sender.balance >= selectedOffer.price, "Insufficient funds to agree to offer");
+        payable(address(this)).transfer(selectedOffer.price);
     }
 
-    function completeTransaction(uint _transactionId) public {
-        require(_transactionId < serviceTransactions.length, "Invalid transaction ID");
-        ServiceTransaction storage transaction = serviceTransactions[_transactionId];
+    function finalizeTransaction(uint transactionId) public {
+        require(transactionId < transactions.length, "Invalid transaction ID");
+        Transaction storage currentTransaction = transactions[transactionId];
         
-        require(!transaction.isCompleted, "Transaction already completed");
-        ServiceOffer storage offer = serviceOffers[transaction.offerId];
+        require(!currentTransaction.completed, "Transaction is already completed");
+        Offer storage transactionOffer = offers[currentTransaction.offerId];
         
-        require(msg.sender == offer.provider, "Only the provider can complete the transaction");
+        require(msg.sender == transactionOffer.provider, "Only the offer's provider can finalize the transaction");
         
-        transaction.isCompleted = true;
-        payable(offer.provider).transfer(offer.price);
-        emit ServiceTransactionCompleted(_transactionId);
+        currentTransaction.completed = true;
+        payable(transactionOffer.provider).transfer(transactionOffer.price);
+        emit TransactionFinished(transactionId);
     }
-
-    constructor() {
-    }
+    
+    constructor() {}
 
     receive() external payable {}
     fallback() external payable {}
