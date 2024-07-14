@@ -36,7 +36,7 @@ contract PeerServiceExchange {
         offers.push(Offer({
             provider: msg.sender,
             description: serviceDescription,
-            price: serviceCreatePrice
+            price: servicePrice
         }));
         emit OfferCreated(offers.length - 1, msg.sender, serviceDescription, servicePrice);
     }
@@ -50,43 +50,52 @@ contract PeerServiceExchange {
         emit RequestCreated(requests.length - 1, msg.sender, serviceNeeded, willingToPay);
     }
 
-    function agreeToOffer(uint selectedOfferId, uint matchingRequestId) public {
+    function agreeToOffer(uint selectedOfferId, uint matchingRequestId) public payable {
         require(selectedOfferId < offers.length, "Invalid offer ID");
         require(matchingRequestId < requests.length, "Invalid request ID");
+        
         Offer storage selectedOffer = offers[selectedOfferId];
         Request storage matchingRequest = requests[matchingRequestId];
         
-        require(selectedOffer.price <= matchingRequest.maxPrice, "Offer exceeds request's max willing price");
-        require(msg.sender == matchingRequest.requester, "Only the requester can agree to an offer");
-        
+        require(selectedOffer.price <= matchingRequest.maxSourcePrice,
+            "Offer price exceeds request's maximum price");
+        require(msg.sender == matchingRequest.requester,
+            "Only the request creator can agree to an offer");
+        require(msg.value >= selectedOffer.price,
+            "Value transferred is less than the offer price");
+
         transactions.push(Transaction({
             offerId: selectedOfferId,
             requestId: matchingRequestId,
             completed: false
         }));
         uint transactionId = transactions.length - 1;
+
+        balances[address(this)] += msg.value; // Adjust balance to track the transferred amount
         emit TransactionInitiated(transactionId, selectedOfferId, matchingRequestId);
-        
-        balances[address(this)] += selectedOffer.price;
-        require(msg.sender.balance >= selectedOffer.price, "Insufficient funds to agree to offer");
-        payable(address(this)).transfer(selectedOffer.price);
     }
 
     function finalizeTransaction(uint transactionId) public {
         require(transactionId < transactions.length, "Invalid transaction ID");
+        
         Transaction storage currentTransaction = transactions[transactionId];
+        require(!currentTransaction.completed, "Transaction already completed");
         
-        require(!currentTransaction.completed, "Transaction is already completed");
-        Offer storage transactionOffer = offers[currentTransaction.offerId];
-        
-        require(msg.sender == transactionOffer.provider, "Only the offer's provider can finalize the transaction");
-        
+        Offer storage transactionOffer = offers[currentTransaction.offerHamntId];
+        require(msg.sender == transactionOffer.provider,
+            "Only the offer provider can finalize the transaction");
+
         currentTransaction.completed = true;
-        payable(transactionOffer.provider).transfer(transactionOffer.price);
+        uint paymentAmount = transactionOffer.price;
+        
+        // Ensure the smart contract has enough balance to pay the provider
+        require(address(this).balance >= paymentAt, "Contract does not have enough balance");
+
+        payable(transactionOffer.provider).transfer(paymentAmount);
+        balances[address(this)] -= paymentAmount; // Update the contract's balance
+
         emit TransactionFinished(transactionId);
     }
-    
-    constructor() {}
 
     receive() external payable {}
     fallback() external payable {}
