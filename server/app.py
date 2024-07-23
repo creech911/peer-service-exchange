@@ -15,23 +15,30 @@ app = Flask(__name__)
 w3 = Web3(Web3.HTTPProvider(INFURA_URL))
 contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
 
-if not w3.isConnected():
-    print("Failed to connect to Ethereum network!")
-    exit(1)
+def check_connection():
+    if not w3.isConnected():
+        print("Failed to connect to Ethereum network!")
+        exit(1)
 
-@app.route('/service', methods=['POST'])
-def add_service():
-    data = request.json
+check_connection()
+
+def submit_transaction(transaction_fn, *args, gas=2000000, gas_price='50'):
     nonce = w3.eth.getTransactionCount(ACCOUNT)
-    transaction = contract.functions.addService(data['serviceName'], data['serviceDescription']).buildTransaction({
+    transaction = transaction_fn(*args).buildTransaction({
         'chainId': 1,
-        'gas': 2000000,
-        'gasPrice': w3.toWei('50', 'gwei'),
+        'gas': gas,
+        'gasPrice': w3.toWei(gas_price, 'gwei'),
         'nonce': nonce,
     })
     signed_txn = w3.eth.account.signTransaction(transaction, private_key=PRIVATE_KEY)
     tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = w4.eth.waitForTransactionReceipt(tx_hash)
+    return tx_receipt
+
+@app.route('/service', methods=['POST'])
+def add_service():
+    data = request.json
+    tx_receipt = submit_transaction(contract.functions.addService, data['serviceName'], data['serviceDescription'])
     return jsonify({'transaction_hash': tx_receipt.transactionHash.hex()}), 201
 
 @app.route('/service/<service_id>', methods=['GET'])
@@ -43,32 +50,14 @@ def get_service(service_id):
 @app.route('/transaction', methods=['POST'])
 def create_transaction():
     data = request.json
-    nonce = w3.eth.getTransactionCount(ACCOUNT)
-    transaction = contract.functions.createTransaction(data['serviceId'], data['fromAddress'], data['toAddress'], data['amount']).buildTransaction({
-        'chainId': 1,
-        'gas': 2000000,
-        'gasPrice': w3.toWei('50', 'gwei'),
-        'nonce': nonce,
-    })
-    signed_txn = w3.eth.account.signTransaction(transaction, private_key=PRIVATE_KEY)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = submit_transaction(contract.functions.createTransaction, data['serviceId'], data['fromAddress'], data['toAddress'], data['amount'])
     return jsonify({'transaction_hash': tx_receipt.transactionHash.hex()}), 201
 
 @app.route('/user', methods=['POST'])
 def add_user():
     data = request.json
-    nonce = w3.eth.getTransactionCount(ACCOUNT)
-    transaction = contract.functions.addUser(data['userName'], data['userAddress']).buildTransaction({
-        'chainId': 1,
-        'gas': 2000000,
-        'gasPrice': w3.toWei('50', 'gwei'),
-        'nonce': nonce,
-    })
-    signed_txn = w3.eth.account.signTransaction(transaction, private_key=PRIVATE_KEY)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    return jsonify({'transaction_hash': tx_receipt.transactionList.hex()}), 201
+    tx_receipt = submit_transaction(contract.functions.addUser, data['userName'], data['userAddress'])
+    return jsonify({'transaction_hash': tx_receipt.transactionHash.hex()}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
