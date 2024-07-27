@@ -4,71 +4,71 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-store = {
+data_store = {
     "users": {},
     "services": {},
     "transactions": {}
 }
 
-def create_user(user_id, data):
-    if user_id in store["users"]:
+def add_user(user_id, details):
+    if user_id in data_store["users"]:
         return "User already exists"
-    store["users"][user_id] = data
+    data_store["users"][user_id] = details
     return "User created successfully"
 
-def get_user(user_id):
-    return store["users"].get(user_id, "User not found")
+def fetch_user(user_id):
+    return data_store["users"].get(user_id, "User not found")
 
-def update_user(user_id, data):
-    if user_id not in store["users"]:
+def modify_user(user_id, details):
+    if user_id not in data_store["users"]:
         return "User not found"
-    store["users"][user_id].update(data)
+    data_store["users"][user_id].update(details)
     return "User updated successfully"
 
-def delete_user(user_id):
-    if user_id in store["users"]:
-        del store["users"][user_id]
+def remove_user(user_id):
+    if user_id in data_store["users"]:
+        del data_store["users"][user_id]
         return "User deleted successfully"
     return "User not found"
 
-def create_service(service_id, data):
-    if service_id in store["services"]:
+def add_service(service_id, details):
+    if service_id in data_store["services"]:
         return "Service already exists"
-    store["services"][service_id] = data
+    data_store["services"][service_id] = details
     return "Service created successfully"
 
-def get_service(service_id):
-    return store["services"].get(service_id, "Service not found")
+def fetch_service(service_id):
+    return data_store["services"].get(service_id, "Service not found")
 
-def update_service(service_id, data):
-    if service_id not in store["services"]:
+def modify_service(service_id, details):
+    if service_id not in data_store["services"]:
         return "Service not found"
-    store["services"][service_id].update(data)
+    data_store["services"][service_id].update(details)
     return "Service updated successfully"
 
-def delete_service(service_Code):
-    if service_id in store["services"]:
-        del store["services"][service_id]
+def remove_service(service_id):  # Fixed parameter name mismatch here
+    if service_id in data_store["services"]:
+        del data_store["services"][service_id]
         return "Service deleted successfully"
     return "Service not found"
 
-def create_transaction(transaction_id, data):
-    if transaction_id in store["transactions"]:
+def add_transaction(transaction_id, details):
+    if transaction_id in data_store["transactions"]:
         return "Transaction already exists"
-    store["transactions"][transaction_id] = data
+    data_store["transactions"][transaction_id] = details
     return "Transaction created successfully"
 
-def get_transaction(transaction_id):
-    return store["transactions"].get(transaction_id, "Transaction not found")
+def fetch_transaction(transaction_id):
+    return data_store["transactions"].get(transaction_id, "Transaction not found")
 
-def update_transaction(transaction_id, data):
-    if transaction_id not in store["transactions"]:
+def modify_transaction(transaction_id, details):
+    if transaction_id not in data_store["transactions"]:
         return "Transaction missing"
-    store["transactions"][transaction_id].update(data)
+    data_store["transactions"][transaction_id].update(details)
     return "Transaction updated successfully"
 
-def delete_transaction(transaction_id):
-    if transaction_id in store["transactions"]:
-        del store["transactions"][transaction_id]
+def remove_transaction(transaction_id):
+    if transaction_id in data_store["transactions"]:
+        del data_store["transactions"][transaction_id]
         return "Transaction deleted successfully"
     return "Transaction not found"
