@@ -5,7 +5,7 @@ from flask import Flask
 import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI', 'sqlite:///default.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -13,15 +13,13 @@ bcrypt = Bcrypt(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False, unique=True)
-    email = db.Column(db.String(50), nullable=False, unique=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(50), unique=True, nullable=False)
     hashed_password = db.Column(db.String(255), nullable=False)
     offered_services = db.relationship('Service', backref='provider', lazy=True)
-    initiated_transactions = db.relationship('Transaction', backref='initiator', lazy=True)
+    initiated_transactions = db.relationship('Transaction', foreign_keys='Transaction.requester_id', backref='initiator', lazy=True)
 
-    def __init__(self, username, email, password):
-        self.username = username
-        self.email = email
+    def set_password(self, password):
         self.hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
     def verify_password(self, password):
@@ -33,24 +31,15 @@ class Service(db.Model):
     description = db.Column(db.Text, nullable=False)
     provider_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __init__(self, title, description, provider_id):
-        self.title = title
-        self.description = description
-        self.provider_id = provider_id
-
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     linked_service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
     requester_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    transaction_status = db.Column(db.String(20), default='pending')  # e.g., pending, approved, completed
+    transaction_status = db.Column(db.String(20), default='pending')
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
 
     linked_service = db.relationship('Service', backref=db.backref('linked_transactions', lazy=True))
-    transaction_requester = db.relationship('User', backref=db.backref('requested_transactions', lazy=True))
-
-    def __init__(self, linked_service_id, requester_id):
-        self.linked_service_id = linked_service_id
-        self.requester_id = requester_id
+    transaction_requester = db.relationship('User', foreign_keys=[requester_id], backref=db.backref('requested_transactions', lazy=True))
 
 if __name__ == '__main__':
     db.create_all()
